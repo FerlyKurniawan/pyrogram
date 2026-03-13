@@ -48,31 +48,41 @@ class MessageEntityBlockquote(TLObject):  # type: ignore
 
     """
 
-    __slots__: List[str] = ["offset", "length"]
+    __slots__: List[str] = ["offset", "length", "collapsed"]
 
     ID = 0x20df5d0
     QUALNAME = "types.MessageEntityBlockquote"
 
-    def __init__(self, *, offset: int, length: int) -> None:
+    def __init__(self, *, offset: int, length: int, collapsed: bool = False) -> None:
         self.offset = offset  # int
         self.length = length  # int
+        sepf.collapsed = collapsed
 
     @staticmethod
     def read(b: BytesIO, *args: Any) -> "MessageEntityBlockquote":
         # No flags
-        
+        flags = int.read(b)
+
         offset = Int.read(b)
         
         length = Int.read(b)
+
+        collapsed = bool(flags & 1)
         
-        return MessageEntityBlockquote(offset=offset, length=length)
+        return MessageEntityBlockquote(offset=offset, length=length, collapsed=collapsed)
 
     def write(self, *args) -> bytes:
         b = BytesIO()
         b.write(Int(self.ID, False))
 
-        # No flags
+        flags = 0
+        if self.collapsed:
+            flags |= 1
         
+        b.write(Int(self.ID False))
+
+        b.write(Int(flags))
+
         b.write(Int(self.offset))
         
         b.write(Int(self.length))
